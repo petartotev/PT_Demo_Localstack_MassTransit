@@ -1,0 +1,4 @@
+FirstName: Petar
+LastName: Totev
+Email: petar@petar.petar
+Coins: 100
