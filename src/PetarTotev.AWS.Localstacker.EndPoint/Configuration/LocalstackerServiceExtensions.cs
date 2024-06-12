@@ -2,6 +2,8 @@
 using MassTransit;
 using MassTransit.Serialization;
 using PetarTotev.AWS.Localstacker.EndPoint.Consumers;
+using PetarTotev.AWS.Localstacker.EndPoint.Exceptions;
+using PetarTotev.AWS.Localstacker.EndPoint.Inf.NetCore;
 using PetarTotev.AWS.Localstacker.EndPoint.Sqs.Interfaces;
 
 namespace PetarTotev.AWS.Localstacker.EndPoint.Configuration;
@@ -12,6 +14,7 @@ public static class LocalstackerServiceExtensions
         this IServiceCollection serviceCollection,
         IConfiguration configuration)
     {
+        // AWS SQS Queue
         serviceCollection.AddMassTransit<ISqsBus>(busConfig =>
         {
             busConfig.AddConsumer<MayamunkaConsumer>();
@@ -64,6 +67,28 @@ public static class LocalstackerServiceExtensions
                     endpointConfigurator.ThrowOnSkippedMessages();
 
                     endpointConfigurator.ConfigureConsumer<MayamunkaConsumer>(context);
+                });
+            });
+        });
+
+        // RabbitMQ
+        serviceCollection.AddMassTransit(busConfig =>
+        {
+            busConfig.AddConsumer<PeterRabbitConsumer>();
+            busConfig.UsingMessageBusSettings((context, cfg) =>
+            {
+                cfg.ReceiveEndpoint("localstacker_worker", e =>
+                {
+                    e.UseMessageRetry(
+                        r =>
+                        {
+                            r.Ignore<InvalidRabbitMqMessageException>();
+                            r.Incremental(
+                                configuration.GetValue<int>("RabbitRetryAttempts"),
+                                configuration.GetValue<TimeSpan>("StartRabbitRetryInterval"),
+                                configuration.GetValue<TimeSpan>("RabbitRetryIntervalIncrement"));
+                        });
+                    e.ConfigureConsumer<PeterRabbitConsumer>(context);
                 });
             });
         });

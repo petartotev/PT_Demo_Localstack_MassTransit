@@ -1,8 +1,6 @@
 ﻿using Amazon.SQS;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using NUnit.Framework;
 using PetarTotev.AWS.Localstacker.EndPoint.Configuration;
 using PetarTotev.AWS.Localstacker.ServiceTests.Helpers;
 

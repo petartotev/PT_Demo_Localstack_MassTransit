@@ -1,5 +1,14 @@
 ---
 services:
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbit
+      RABBITMQ_DEFAULT_PASS: Test321!
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
   localstack:
     image: localstack/localstack:1.4.0
     volumes:

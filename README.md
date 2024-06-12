@@ -1,11 +1,13 @@
 # PT_Demo_Localstack_MassTransit
 
 ## Contents
-- [Demo Localstack](#demo-localstack)
-- [Demo MassTransit](#demo-masstransit)
+- [Demos](#demos)
+  - [Demo Localstack](#demo-localstack)
+  - [Demo MassTransit + SQS](#demo-masstransit--sqs)
     - [Contracts](#petartotevawslocalstackercontracts)
     - [EndPoint](#petartotevawslocalstackerendpoint)
     - [ServiceTests](#petartotevawslocalstackerservicetests)
+  - [Demo MassTransit + RabbitMQ](#demo-masstransit--rabbitmq)
 - [Known Issues](#known-issues)
 - [Commands](#commands)
     - [Localstack](#commands-localstack)
@@ -13,7 +15,9 @@
     - [Localstack](#links-localstack)
     - [MassTransit](#links-masstransit)
 
-## Demo Localstack
+## Demos
+
+### Demo Localstack
 
 0. Let's imagine we have a SQS Queue in AWS named `mayamunka-test-queue`.
 
@@ -185,14 +189,16 @@ Output:
 docker compose down -v
 ```
 
-## Demo MassTransit
+---
+
+### Demo MassTransit + SQS
 
 Create new blank Solution `PetarTotev.AWS.Localstacker` which contains the following projects:
 - PetarTotev.AWS.Localstacker.Contracts *// .NET Standard 2.0 Class Library*
 - PetarTotev.AWS.Localstacker.EndPoint *// .NET 8.0 Web API Project*
 - PetarTotev.AWS.Localstacker.ServiceTests *// .NET 8.0 NUnit Project*
 
-### PetarTotev.AWS.Localstacker.Contracts
+#### PetarTotev.AWS.Localstacker.Contracts
 
 Introduce the following contract `MayamunkaMessage`:
 
@@ -213,7 +219,7 @@ public class MayamunkaMessage
 }
 ```
 
-### PetarTotev.AWS.Localstacker.EndPoint
+#### PetarTotev.AWS.Localstacker.EndPoint
 
 1. Install the following NuGet packages:
 - MassTransit (8.0.15)
@@ -386,7 +392,7 @@ public static class LocalstackerServiceExtensions
 
 💡 `AwsSqsQueueMayamunka` will be taken from `appsettings.json`.
 
-### PetarTotev.AWS.Localstacker.ServiceTests
+#### PetarTotev.AWS.Localstacker.ServiceTests
 
 1. Install the following NuGet packages:
 - AWSSDK.Core (3.7.202.10)
@@ -427,6 +433,12 @@ public class MayamunkaConsumerTests : ServiceTestsBase
     }
 }
 ```
+
+---
+
+### Demo MassTransit + RabbitMQ
+
+
 
 ## Known Issues
 

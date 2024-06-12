@@ -1,0 +1,28 @@
+{
+  "messageId": "b8b7522e-8694-4f9b-9ad1-24b1b21707c2",
+  "conversationId": "b8b7522e-8694-4f9b-9ad1-24b1b21707c2",
+  "sourceAddress": "rabbitmq://localhost/",
+  "destinationAddress": "rabbitmq://localhost/queue_name",
+  "messageType": [
+    "urn:message:PetarTotev.AWS.Localstacker.Contracts.Messages:PeterRabbitMessage"
+  ],
+  "message": {
+    "Author": "Beatrix Potter",
+    "Title": "The Tale of Peter Rabbit",
+    "Subtitle": "A Classic Tale",
+    "Content": "Once upon a time there were four little Rabbits, and their names were—Flopsy, Mopsy, Cotton-tail, and Peter.",
+    "DatePublished": "1902-10-01T00:00:00",
+    "IsInEnglish": true
+  },
+  "headers": {},
+  "host": {
+    "machineName": "DESKTOP-ABCD1YZ", // replace with your PC's Device Name
+    "processName": "PetarTotev.AWS.Localstacker.EndPoint",
+    "processId": 25356,
+    "assembly": "PetarTotev.AWS.Localstacker.EndPoint",
+    "assemblyVersion": "1.0.0.0",
+    "frameworkVersion": "8.0.5",
+    "massTransitVersion": "8.0.15.0",
+    "operatingSystemVersion": "Microsoft Windows NT 10.0.19045.0"
+  }
+}
