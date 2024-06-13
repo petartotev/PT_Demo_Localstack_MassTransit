@@ -1,13 +1,18 @@
 # PT_Demo_Localstack_MassTransit
 
 ## Contents
-- [Demos](#demos)
-  - [Demo Localstack](#demo-localstack)
-  - [Demo MassTransit + SQS](#demo-masstransit--sqs)
-    - [Contracts](#petartotevawslocalstackercontracts)
-    - [EndPoint](#petartotevawslocalstackerendpoint)
-    - [ServiceTests](#petartotevawslocalstackerservicetests)
-  - [Demo MassTransit + RabbitMQ](#demo-masstransit--rabbitmq)
+- [Demo Localstack](#demo-localstack)
+- [Demo MassTransit + SQS](#demo-masstransit--sqs)
+  - [Solution SQS](#solution-sqs)
+    - [Contracts SQS](#petartotevawslocalstackercontracts-sqs)
+    - [EndPoint SQS](#petartotevawslocalstackerendpoint-sqs)
+    - [ServiceTests SQS](#petartotevawslocalstackerservicetests-sqs)
+- [Demo MassTransit + RabbitMQ](#demo-masstransit--rabbitmq)
+  - [Docker Compose Rabbit](#docker-compose-rabbit)
+  - [Solution Rabbit](#solution-rabbit)
+    - [Contracts Rabbit](#petartotevawslocalstackercontracts-rabbit)
+    - [EndPoint Rabbit](#petartotevawslocalstackerendpoint-rabbit)
+  - [Rabbit Management UI](#rabbit-management-ui)
 - [Known Issues](#known-issues)
 - [Commands](#commands)
     - [Localstack](#commands-localstack)
@@ -15,9 +20,7 @@
     - [Localstack](#links-localstack)
     - [MassTransit](#links-masstransit)
 
-## Demos
-
-### Demo Localstack
+## Demo Localstack
 
 0. Let's imagine we have a SQS Queue in AWS named `mayamunka-test-queue`.
 
@@ -191,14 +194,16 @@ docker compose down -v
 
 ---
 
-### Demo MassTransit + SQS
+## Demo MassTransit + SQS
+
+### Solution SQS
 
 Create new blank Solution `PetarTotev.AWS.Localstacker` which contains the following projects:
 - PetarTotev.AWS.Localstacker.Contracts *// .NET Standard 2.0 Class Library*
 - PetarTotev.AWS.Localstacker.EndPoint *// .NET 8.0 Web API Project*
 - PetarTotev.AWS.Localstacker.ServiceTests *// .NET 8.0 NUnit Project*
 
-#### PetarTotev.AWS.Localstacker.Contracts
+### PetarTotev.AWS.Localstacker.Contracts SQS
 
 Introduce the following contract `MayamunkaMessage`:
 
@@ -219,7 +224,7 @@ public class MayamunkaMessage
 }
 ```
 
-#### PetarTotev.AWS.Localstacker.EndPoint
+### PetarTotev.AWS.Localstacker.EndPoint SQS
 
 1. Install the following NuGet packages:
 - MassTransit (8.0.15)
@@ -392,7 +397,7 @@ public static class LocalstackerServiceExtensions
 
 💡 `AwsSqsQueueMayamunka` will be taken from `appsettings.json`.
 
-#### PetarTotev.AWS.Localstacker.ServiceTests
+### PetarTotev.AWS.Localstacker.ServiceTests SQS
 
 1. Install the following NuGet packages:
 - AWSSDK.Core (3.7.202.10)
@@ -436,7 +441,230 @@ public class MayamunkaConsumerTests : ServiceTestsBase
 
 ---
 
-### Demo MassTransit + RabbitMQ
+## Demo MassTransit + RabbitMQ
+
+### Docker Compose Rabbit
+
+In `docker-compose.yml`, add RabbitMQ:
+
+```
+---
+services:
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbit
+      RABBITMQ_DEFAULT_PASS: Test321!
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  localstack:
+    image: localstack/localstack:1.4.0
+    volumes:
+      - "localstackdata:/tmp/localstack"
+      - "./localstack/localstack-init.sh:/docker-entrypoint-initaws.d/localstack-init.sh"
+    ports:
+      - '4563-4599:4563-4599'
+    environment:
+      SERVICES: sqs
+      PERSISTENCE: /tmp/localstack/data # needed for persistance
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    healthcheck:
+      test: "awslocal sqs list-queues"
+      interval: 10s
+volumes:
+  localstackdata:
+```
+
+💡 SUGGESTION: In the context of DK, a new `docker-compose.override.yml` file is introduced which keeps port mapping for the services:
+
+```
+---
+# expose the container ports where mysql and rabbit are running to the host
+# useful for local development scenarios when using docker compose up
+services:
+  rabbitmq:
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  mysql:
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+volumes:
+  dbdata:
+```
+
+Here, port mapping is hardcoded directly in the main `docker-compose.yml` file.
+
+Finally, run the Docker containers:
+
+```
+docker-compose up -d
+```
+
+### Solution Rabbit
+
+Make sure you did all steps in [Demo MassTransit + SQS](#demo-masstransit--sqs) - creating the solution and the 3 projects.
+
+### PetarTotev.AWS.Localstacker.Contracts Rabbit
+
+Introduce the following contract `PeterRabbitMessage`:
+
+```
+[DataContract]
+public class MayamunkaMessage
+{
+    [DataMember]
+    public string FirstName { get; set; }
+    [DataMember]
+    public string LastName { get; set; }
+    [DataMember]
+    public string Email { get; set; }
+    [DataMember]
+    public int Coins { get; set; }
+
+    public override string ToString() { ... }
+}
+```
+
+### PetarTotev.AWS.Localstacker.EndPoint Rabbit
+
+1. Here are the NuGet packages you should have already installed:
+- MassTransit (8.0.15)
+- MassTransit.AmazonSQS (8.0.15)
+- Newtonsoft.Json (9.0.1)
+- Swashbuckle.AspNetCore (6.4.0) // default
+
+Also add:
+- MassTransit.RabbitMQ (8.0.15)
+
+2. Introduce class `PeterRabbitConsumer` which implements interface `IConsumer` from MassTransit:
+
+```
+public class MayamunkaConsumer : IConsumer<MayamunkaMessage>
+{
+    public async Task Consume(ConsumeContext<MayamunkaMessage> context)
+    {
+        var message = context.Message;
+        await Console.Out.WriteAsync(message.ToString());
+        await File.WriteAllTextAsync("./MayamunkaConsumer.txt", message.ToString());
+    }
+}
+```
+
+3. Change existing static class `LocalstackerServiceExtensions` and its extension method already invoked in Program.cs's Main method:
+
+```
+public static class LocalstackerServiceExtensions
+{
+    public static IServiceCollection AddLocalStackerMessageHandlers(
+        this IServiceCollection serviceCollection,
+        IConfiguration configuration)
+    {
+        // AWS SQS Queue
+        serviceCollection.AddMassTransit<ISqsBus>(busConfig => { /* existing logic here */ });
+
+        // RabbitMQ
+        serviceCollection.AddMassTransit(busConfig =>
+        {
+            busConfig.AddConsumer<PeterRabbitConsumer>();
+            busConfig.UsingMessageBusSettings((context, cfg) =>
+            {
+                cfg.ReceiveEndpoint("localstacker_worker", e =>
+                {
+                    e.UseMessageRetry(
+                        r =>
+                        {
+                            r.Ignore<InvalidRabbitMqMessageException>();
+                            r.Incremental(
+                                configuration.GetValue<int>("RabbitRetryAttempts"),
+                                configuration.GetValue<TimeSpan>("StartRabbitRetryInterval"),
+                                configuration.GetValue<TimeSpan>("RabbitRetryIntervalIncrement"));
+                        });
+                    e.ConfigureConsumer<PeterRabbitConsumer>(context);
+                });
+            });
+        });
+
+        return serviceCollection;
+    }
+}
+```
+
+4. In `/Inf/NetCore` directory, implement the following classes:
+- LegacyMasstransitHeadersFilter.cs
+- MassTransitConfigurationExtensions.cs
+- MessageBusOptions.cs
+
+5. In `appsettings.json`, add the following Rabbit- related props:
+
+```
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  // AWS-Related Props here...
+  // RABBITMQ
+  "RabbitRetryAttempts": 4,
+  "StartRabbitRetryInterval": "00:00:00.500",
+  "RabbitRetryIntervalIncrement": "00:00:01"
+}
+```
+
+6. Add a breakpoint in `PeterRabbitConsumer.cs`, then run the application.
+
+### Rabbit Management UI
+
+Open RabbitMQ Management UI on `http://localhost:15672/`, open `Queues`, find Queue `localstacker_worker`, then publish the following message:
+
+```
+{
+  "messageId": "b8b7522e-8694-4f9b-9ad1-24b1b21707c2",
+  "conversationId": "b8b7522e-8694-4f9b-9ad1-24b1b21707c2",
+  "sourceAddress": "rabbitmq://localhost/",
+  "destinationAddress": "rabbitmq://localhost/queue_name",
+  "messageType": [
+    "urn:message:PetarTotev.AWS.Localstacker.Contracts.Messages:PeterRabbitMessage"
+  ],
+  "message": {
+    "Author": "Beatrix Potter",
+    "Title": "The Tale of Peter Rabbit",
+    "Subtitle": "A Classic Tale",
+    "Content": "Once upon a time there were four little Rabbits, and their names were—Flopsy, Mopsy, Cotton-tail, and Peter.",
+    "DatePublished": "1902-10-01T00:00:00",
+    "IsInEnglish": true
+  },
+  "headers": {},
+  "host": {
+    "machineName": "DESKTOP-ABCD1YZ", // replace with your PC's Device Name
+    "processName": "PetarTotev.AWS.Localstacker.EndPoint",
+    "processId": 25356,
+    "assembly": "PetarTotev.AWS.Localstacker.EndPoint",
+    "assemblyVersion": "1.0.0.0",
+    "frameworkVersion": "8.0.5",
+    "massTransitVersion": "8.0.15.0",
+    "operatingSystemVersion": "Microsoft Windows NT 10.0.19045.0"
+  }
+}
+```
+
+✅ SUCCESS: You should have successfully hit the breakpoint!
+
+![Rabbit Management UI](./res/rabbit-management-ui.png)
+
+⚠️ WARNING: Note that if you don't follow the message payload structure exactly, messages will fail to publish and will be moved in newly created `localstacker_queue_error` and `localstacker_queue_skipped`":
+
+![Rabbit Management UI](./res/rabbit-management-ui-queues.png)
 
 
 
